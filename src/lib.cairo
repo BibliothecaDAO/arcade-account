@@ -220,7 +220,8 @@ mod Account {
 
     #[internal]
     fn _execute_single_call(call: Call) -> Span<felt252> {
-        // only deployer can withdraw from account
+         
+        
         let Call{to, selector, calldata } = call;
         starknet::call_contract_syscall(to, selector, calldata.span()).unwrap_syscall()
     }
