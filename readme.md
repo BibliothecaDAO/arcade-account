@@ -1,3 +1,6 @@
+![arcade account](./public/arcadeAccount.png)
+
+
 ## Arcade Accounts: Long lasting Session Keys for smooth UX
 
 > **Disclaimer:** This feature remains in its experimental phase and hasn't undergone auditing. Its use is entirely at your own discretion and risk. As it stands, Arcade Account is a work-in-progress. Your feedback is valuable to us in its continued development!
@@ -10,6 +13,7 @@ An Arcade Account is an enhanced version of the standard Starknet Account, furni
 
 - It requires an associated master account, established at the time of contract deployment.
 - Only the master account can withdraw funds, barring scenarios where explicit permissions have been given to the Arcade Account.
+- It can only transfer ETH to the sequencer account
 - The use of Eth/Tokens by the Arcade Account is limited to transaction signing, precluding direct transfers to other accounts.
 
 Arcade Accounts were created to mitigate the user experience hurdles that onchain games face when interacting with standard browser-based wallets. These accounts supplement rather than replace traditional wallets, fostering a harmonious coexistence.
@@ -38,3 +42,4 @@ This enables the potential for frequent deployment of Arcade Accounts by users d
 
 - [ ] Auto top up of eth from Master
 - [ ] General feedback and improvements around security
+- [ ] Add ability for Master Account to give complex permissions. EG: Can transfer an ERC20 token to a specific address
