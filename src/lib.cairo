@@ -4,8 +4,10 @@ use option::OptionTrait;
 use serde::Serde;
 use starknet::account::Call;
 
+
 mod account;
 mod introspection;
+mod utils;
 
 const TRANSACTION_VERSION: felt252 = 1;
 
@@ -24,6 +26,8 @@ trait PublicKeyCamelTrait<TState> {
 
 #[starknet::contract]
 mod Account {
+    use traits::TryInto;
+    use traits::Into;
     use array::SpanTrait;
     use array::ArrayTrait;
     use box::BoxTrait;
@@ -44,6 +48,9 @@ mod Account {
     use super::QUERY_VERSION;
     use super::TRANSACTION_VERSION;
 
+    use arcadeAccount::utils::{selectors, contracts};
+
+
     #[storage]
     struct Storage {
         public_key: felt252,
@@ -51,7 +58,9 @@ mod Account {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, _public_key: felt252, _master_account: ContractAddress) {
+    fn constructor(
+        ref self: ContractState, _public_key: felt252, _master_account: ContractAddress
+    ) {
         self.initializer(_public_key);
         self.master_account.write(_master_account);
     }
@@ -75,7 +84,7 @@ mod Account {
                 assert(version == QUERY_VERSION, 'Account: invalid tx version');
             }
 
-            _execute_calls(calls)
+            _execute_calls(self, calls)
         }
 
         fn __validate__(self: @ContractState, mut calls: Array<Call>) -> felt252 {
@@ -202,12 +211,12 @@ mod Account {
     }
 
     #[internal]
-    fn _execute_calls(mut calls: Array<Call>) -> Array<Span<felt252>> {
+    fn _execute_calls(self: @ContractState, mut calls: Array<Call>) -> Array<Span<felt252>> {
         let mut res = ArrayTrait::new();
         loop {
             match calls.pop_front() {
                 Option::Some(call) => {
-                    let _res = _execute_single_call(call);
+                    let _res = _execute_single_call(self, call);
                     res.append(_res);
                 },
                 Option::None(_) => {
@@ -219,10 +228,20 @@ mod Account {
     }
 
     #[internal]
-    fn _execute_single_call(call: Call) -> Span<felt252> {
-         
-        
+    fn _execute_single_call(self: @ContractState, call: Call) -> Span<felt252> {
         let Call{to, selector, calldata } = call;
+
+        // only allow transfering to the sequencer contract or master
+        if (to != contracts::starknet_sequencer.try_into().unwrap()) {
+            if (to != self.master_account.read()) {
+                assert(selector != selectors::transfer, 'Account: Cannot transfer');
+                assert(selector != selectors::transfer_from, 'Account: Cannot transfer');
+                assert(selector != selectors::transferFrom, 'Account: Cannot transfer');
+                assert(selector != selectors::safe_transfer_from, 'Account: Cannot transfer');
+                assert(selector != selectors::safeTransferFrom, 'Account: Cannot transfer');
+            }
+        }
+
         starknet::call_contract_syscall(to, selector, calldata.span()).unwrap_syscall()
     }
 }

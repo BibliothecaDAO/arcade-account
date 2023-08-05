@@ -34,3 +34,7 @@ Starknet utilizes a strategy of predeclaring a contract prior to deployment to c
 This enables the potential for frequent deployment of Arcade Accounts by users directly from web applications, all at minimal cost!
 
 
+### TODO
+
+- [ ] Auto top up of eth from Master
+- [ ] General feedback and improvements around security
