@@ -38,6 +38,7 @@ mod Account {
     use starknet::get_contract_address;
     use starknet::ContractAddress;
     use zeroable::Zeroable;
+    use starknet::contract_address::contract_address_const;
 
     use arcade_account::account::interface;
     use arcade_account::introspection::interface::ISRC5;
@@ -50,19 +51,51 @@ mod Account {
 
     use arcade_account::utils::{selectors, contracts};
 
+    const TRUE: felt252 = 1;
+    const FALSE: felt252 = 0;
+
 
     #[storage]
     struct Storage {
         public_key: felt252,
-        master_account: ContractAddress
+        master_account: ContractAddress,
+        whitelisted_contracts: LegacyMap::<ContractAddress, felt252>,
+        whitelisted_calls: LegacyMap::<(ContractAddress, felt252),  felt252>
     }
 
     #[constructor]
     fn constructor(
-        ref self: ContractState, _public_key: felt252, _master_account: ContractAddress
+        ref self: ContractState, 
+        _public_key: felt252, 
+        _master_account: ContractAddress,
+        _whitelisted_contracts: Array<(ContractAddress, felt252)>,
+        _whitelisted_calls: Array<(ContractAddress, felt252, felt252)>
+
     ) {
         self.initializer(_public_key);
         self.master_account.write(_master_account);
+
+        _update_whitelisted_contracts(ref self, _whitelisted_contracts);
+        _update_whitelisted_calls(ref self, _whitelisted_calls);
+
+    }
+
+    #[external(v0)]
+    impl MasterControlImpl of interface::IMasterControl<ContractState> {
+        fn update_whitelisted_contracts(ref self: ContractState, data: Array<(ContractAddress, felt252)>) {
+            assert_only_master(@self);
+            _update_whitelisted_contracts(ref self, data);
+        }
+
+        fn update_whitelisted_calls(ref self: ContractState, data: Array<(ContractAddress, felt252, felt252)>) {
+            assert_only_master(@self);
+            _update_whitelisted_calls(ref self, data);
+        }
+
+        fn function_call(ref self: ContractState, data: Array<Call>) -> Array<Span<felt252>> {
+            assert_only_master(@self);
+            _execute_master_calls(@self, data)
+        }
     }
 
     //
@@ -141,7 +174,10 @@ mod Account {
         }
 
         fn set_public_key(ref self: ContractState, new_public_key: felt252) {
-            assert_only_self();
+            // Since the private key isn't considered secure,
+            // only the master account should be able to change the 
+            // public key as opposed to self
+            assert_only_master(@self);
             self.public_key.write(new_public_key);
         }
     }
@@ -153,7 +189,10 @@ mod Account {
         }
 
         fn setPublicKey(ref self: ContractState, newPublicKey: felt252) {
-            assert_only_self();
+            // Since the private key isn't considered secure,
+            // only the master account should be able to change the 
+            // public key as opposed to self
+            assert_only_master(@self);
             self.public_key.write(newPublicKey);
         }
     }
@@ -204,11 +243,133 @@ mod Account {
     }
 
     #[internal]
-    fn assert_only_self() {
+    fn assert_only_master(self: @ContractState) {
         let caller = get_caller_address();
-        let self = get_contract_address();
-        assert(self == caller, 'Account: unauthorized');
+        assert(self.master_account.read() == caller, 'Account: unauthorized');
     }
+
+
+
+    #[internal]
+    fn _update_whitelisted_calls(ref self: ContractState, mut data: Array<(ContractAddress, felt252, felt252)>) {
+        loop {
+            match data.pop_front() {
+                Option::Some((addr, selector, value)) => {
+                    _update_whitelisted_call(ref self, addr, selector, value);
+                },
+                Option::None(_) => {
+                    break ();
+                }
+            };
+        };
+    }
+
+
+    #[internal]
+    fn _update_whitelisted_contracts(ref self: ContractState, mut data: Array<(ContractAddress, felt252)>) {
+        loop {
+            match data.pop_front() {
+                Option::Some((addr,value)) => {
+                    _update_whitelisted_contract(ref self, addr, value);
+                },
+                Option::None(_) => {
+                    break ();
+                }
+            };
+        };
+    }
+
+
+    #[internal]
+    #[inline(always)]
+    fn _update_whitelisted_contract(ref self: ContractState, addr: ContractAddress, value: felt252) {
+        assert(value == TRUE || value == FALSE, 'Account: invalid value');
+        self.whitelisted_contracts.write(addr, value);
+    }
+
+
+    #[internal]
+    #[inline(always)]
+    fn _update_whitelisted_call(ref self: ContractState, addr: ContractAddress, selector: felt252, value: felt252) {
+        assert(value == TRUE || value == FALSE, 'Account: invalid value');
+        self.whitelisted_calls.write((addr, selector), value);
+    }
+
+
+    #[internal]
+    fn _is_whitelisted_contract(self: @ContractState, addr: ContractAddress) -> bool {
+        let mut hard_whitelist = array![
+            
+            //////////////////////////////////////////////////////
+            // hardccoded whitelists should be added here for gas
+            // efficiency. Note that this cannot be overriden by
+            // the master account so careful consideration should
+            // be taken when adding items to this list.
+            //
+            // The addresses that will be called most frequently
+            // should be included at the top of the list.
+            //////////////////////////////////////////////////////
+            
+            contract_address_const::<0>()
+        ];
+        let is_hard_whitelisted = loop {
+            match hard_whitelist.pop_front() {
+                Option::Some(_addr) => {
+                    if _addr == addr {
+                        break true;
+                    }
+                },
+                Option::None(_) => {
+                    break false;
+                }
+            };
+        };
+
+        if is_hard_whitelisted {
+            return true;
+        }
+
+        self.whitelisted_contracts.read(addr) == TRUE
+    }
+
+
+    #[internal]
+    fn _is_whitelisted_call(self: @ContractState, addr: ContractAddress, selector: felt252) -> bool {
+        let mut hard_whitelist = array![
+
+            //////////////////////////////////////////////////////
+            // hardccoded whitelists should be added here for gas 
+            // efficiency. Note that this cannot be overriden by
+            // the master account so careful consideration should
+            // be taken when adding items to this list.
+            //
+            // The items that will be called most frequently should
+            // be included at the top of the list.
+            //
+            //////////////////////////////////////////////////////
+            
+            (contract_address_const::<0>(),0) 
+        ];
+        let is_hard_whitelisted = loop {
+            match hard_whitelist.pop_front() {
+                Option::Some((_addr, _selector)) => {
+                    if _addr == addr && _selector == selector {
+                        break true;
+                    }
+                },
+                Option::None(_) => {
+                    break false;
+                }
+            };
+        };
+
+        if is_hard_whitelisted {
+            return true;
+        }
+        self.whitelisted_calls.read((addr, selector)) == TRUE
+    }
+
+
 
     #[internal]
     fn _execute_calls(self: @ContractState, mut calls: Array<Call>) -> Array<Span<felt252>> {
@@ -231,17 +392,35 @@ mod Account {
     fn _execute_single_call(self: @ContractState, call: Call) -> Span<felt252> {
         let Call{to, selector, calldata } = call;
 
-        // only allow transfering to the sequencer contract or master
-        if (to != contracts::starknet_sequencer.try_into().unwrap()) {
-            if (to != self.master_account.read()) {
-                assert(selector != selectors::transfer, 'Account: Cannot transfer');
-                assert(selector != selectors::transfer_from, 'Account: Cannot transfer');
-                assert(selector != selectors::transferFrom, 'Account: Cannot transfer');
-                assert(selector != selectors::safe_transfer_from, 'Account: Cannot transfer');
-                assert(selector != selectors::safeTransferFrom, 'Account: Cannot transfer');
-            }
-        }
+        if !(_is_whitelisted_contract(self, to) || _is_whitelisted_call(self, to, selector)) {
+            assert(false, 'Account: Permission denied');
+        } 
 
+        starknet::call_contract_syscall(to, selector, calldata.span()).unwrap_syscall()
+    }
+
+
+    #[internal]
+    fn _execute_master_calls(self: @ContractState, mut calls: Array<Call>) -> Array<Span<felt252>> {
+        let mut res = ArrayTrait::new();
+        loop {
+            match calls.pop_front() {
+                Option::Some(call) => {
+                    let _res = _execute_single_master_call(self, call);
+                    res.append(_res);
+                },
+                Option::None(_) => {
+                    break ();
+                },
+            };
+        };
+        res
+    }
+
+
+    #[internal]
+    fn _execute_single_master_call(self: @ContractState, call: Call) -> Span<felt252> {
+        let Call{to, selector, calldata } = call;
         starknet::call_contract_syscall(to, selector, calldata.span()).unwrap_syscall()
     }
 }
