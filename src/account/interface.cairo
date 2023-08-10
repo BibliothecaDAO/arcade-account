@@ -50,3 +50,10 @@ trait AccountCamelABI<TState> {
     fn isValidSignature(self: @TState, hash: felt252, signature: Array<felt252>) -> felt252;
     fn supportsInterface(self: @TState, interfaceId: felt252) -> bool;
 }
+
+#[starknet::interface]
+trait IMasterControl<TState> {
+    fn update_whitelisted_contracts(ref self: TState, data: Array<(ContractAddress, bool)>);
+    fn update_whitelisted_calls(ref self: TState, data: Array<(ContractAddress, felt252, bool)>);
+    fn function_call(ref self: TState, data: Array<Call>) -> Array<Span<felt252>>;
+}

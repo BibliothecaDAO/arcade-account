@@ -1,6 +1,6 @@
 #[starknet::contract]
 mod SRC5 {
-    use arcadeAccount::introspection::interface;
+    use arcade_account::introspection::interface;
 
     #[storage]
     struct Storage {
