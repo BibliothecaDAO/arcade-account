@@ -51,9 +51,6 @@ mod Account {
 
     use arcade_account::utils::{selectors, contracts};
 
-    const TRUE: felt252 = 1;
-    const FALSE: felt252 = 0;
-
 
     #[storage]
     struct Storage {
