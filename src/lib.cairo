@@ -8,6 +8,7 @@ use starknet::account::Call;
 mod account;
 mod introspection;
 mod utils;
+mod tests;
 
 const TRANSACTION_VERSION: felt252 = 1;
 
