@@ -8,6 +8,7 @@ use starknet::account::Call;
 mod account;
 mod introspection;
 mod utils;
+mod tests;
 
 const TRANSACTION_VERSION: felt252 = 1;
 
@@ -293,7 +294,7 @@ mod Account {
 
     #[internal]
     fn _is_whitelisted_contract(self: @ContractState, addr: ContractAddress) -> bool {
-        let mut hard_whitelist = array![
+        let mut hard_whitelist: Array::<ContractAddress> = array![
             
             //////////////////////////////////////////////////////
             // hardccoded whitelists should be added here for gas
@@ -305,7 +306,6 @@ mod Account {
             // should be included at the top of the list.
             //////////////////////////////////////////////////////
             
-            contract_address_const::<0>()
         ];
         let is_hard_whitelisted = loop {
             match hard_whitelist.pop_front() {
@@ -330,7 +330,8 @@ mod Account {
 
     #[internal]
     fn _is_whitelisted_call(self: @ContractState, addr: ContractAddress, selector: felt252) -> bool {
-        let mut hard_whitelist = array![
+
+        let mut hard_whitelist: Array::<(ContractAddress, felt252)> = array![
 
             //////////////////////////////////////////////////////
             // hardccoded whitelists should be added here for gas 
@@ -340,10 +341,9 @@ mod Account {
             //
             // The items that will be called most frequently should
             // be included at the top of the list.
-            //
+            // 
             //////////////////////////////////////////////////////
             
-            (contract_address_const::<0>(),0) 
         ];
         let is_hard_whitelisted = loop {
             match hard_whitelist.pop_front() {
