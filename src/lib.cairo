@@ -59,8 +59,8 @@ mod Account {
     struct Storage {
         public_key: felt252,
         master_account: ContractAddress,
-        whitelisted_contracts: LegacyMap::<ContractAddress, felt252>,
-        whitelisted_calls: LegacyMap::<(ContractAddress, felt252),  felt252>
+        whitelisted_contracts: LegacyMap::<ContractAddress, bool>,
+        whitelisted_calls: LegacyMap::<(ContractAddress, felt252), bool>
     }
 
     #[constructor]
@@ -68,8 +68,8 @@ mod Account {
         ref self: ContractState, 
         _public_key: felt252, 
         _master_account: ContractAddress,
-        _whitelisted_contracts: Array<(ContractAddress, felt252)>,
-        _whitelisted_calls: Array<(ContractAddress, felt252, felt252)>
+        _whitelisted_contracts: Array<(ContractAddress, bool)>,
+        _whitelisted_calls: Array<(ContractAddress, felt252, bool)>
 
     ) {
         self.initializer(_public_key);
@@ -82,12 +82,12 @@ mod Account {
 
     #[external(v0)]
     impl MasterControlImpl of interface::IMasterControl<ContractState> {
-        fn update_whitelisted_contracts(ref self: ContractState, data: Array<(ContractAddress, felt252)>) {
+        fn update_whitelisted_contracts(ref self: ContractState, data: Array<(ContractAddress, bool)>) {
             assert_only_master(@self);
             _update_whitelisted_contracts(ref self, data);
         }
 
-        fn update_whitelisted_calls(ref self: ContractState, data: Array<(ContractAddress, felt252, felt252)>) {
+        fn update_whitelisted_calls(ref self: ContractState, data: Array<(ContractAddress, felt252, bool)>) {
             assert_only_master(@self);
             _update_whitelisted_calls(ref self, data);
         }
@@ -251,7 +251,7 @@ mod Account {
 
 
     #[internal]
-    fn _update_whitelisted_calls(ref self: ContractState, mut data: Array<(ContractAddress, felt252, felt252)>) {
+    fn _update_whitelisted_calls(ref self: ContractState, mut data: Array<(ContractAddress, felt252, bool)>) {
         loop {
             match data.pop_front() {
                 Option::Some((addr, selector, value)) => {
@@ -266,7 +266,7 @@ mod Account {
 
 
     #[internal]
-    fn _update_whitelisted_contracts(ref self: ContractState, mut data: Array<(ContractAddress, felt252)>) {
+    fn _update_whitelisted_contracts(ref self: ContractState, mut data: Array<(ContractAddress, bool)>) {
         loop {
             match data.pop_front() {
                 Option::Some((addr,value)) => {
@@ -282,16 +282,14 @@ mod Account {
 
     #[internal]
     #[inline(always)]
-    fn _update_whitelisted_contract(ref self: ContractState, addr: ContractAddress, value: felt252) {
-        assert(value == TRUE || value == FALSE, 'Account: invalid value');
+    fn _update_whitelisted_contract(ref self: ContractState, addr: ContractAddress, value: bool) {
         self.whitelisted_contracts.write(addr, value);
     }
 
 
     #[internal]
     #[inline(always)]
-    fn _update_whitelisted_call(ref self: ContractState, addr: ContractAddress, selector: felt252, value: felt252) {
-        assert(value == TRUE || value == FALSE, 'Account: invalid value');
+    fn _update_whitelisted_call(ref self: ContractState, addr: ContractAddress, selector: felt252, value: bool) {
         self.whitelisted_calls.write((addr, selector), value);
     }
 
@@ -329,7 +327,7 @@ mod Account {
             return true;
         }
 
-        self.whitelisted_contracts.read(addr) == TRUE
+        self.whitelisted_contracts.read(addr)
     }
 
 
@@ -366,7 +364,7 @@ mod Account {
         if is_hard_whitelisted {
             return true;
         }
-        self.whitelisted_calls.read((addr, selector)) == TRUE
+        self.whitelisted_calls.read((addr, selector))
     }
 
 
