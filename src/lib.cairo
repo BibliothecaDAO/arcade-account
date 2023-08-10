@@ -39,16 +39,16 @@ mod Account {
     use starknet::ContractAddress;
     use zeroable::Zeroable;
 
-    use arcadeAccount::account::interface;
-    use arcadeAccount::introspection::interface::ISRC5;
-    use arcadeAccount::introspection::interface::ISRC5Camel;
-    use arcadeAccount::introspection::src5::SRC5;
+    use arcade_account::account::interface;
+    use arcade_account::introspection::interface::ISRC5;
+    use arcade_account::introspection::interface::ISRC5Camel;
+    use arcade_account::introspection::src5::SRC5;
 
     use super::Call;
     use super::QUERY_VERSION;
     use super::TRANSACTION_VERSION;
 
-    use arcadeAccount::utils::{selectors, contracts};
+    use arcade_account::utils::{selectors, contracts};
 
 
     #[storage]
