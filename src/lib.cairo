@@ -63,29 +63,31 @@ mod Account {
 
     #[constructor]
     fn constructor(
-        ref self: ContractState, 
-        _public_key: felt252, 
+        ref self: ContractState,
+        _public_key: felt252,
         _master_account: ContractAddress,
         _whitelisted_contracts: Array<(ContractAddress, bool)>,
         _whitelisted_calls: Array<(ContractAddress, felt252, bool)>
-
     ) {
         self.initializer(_public_key);
         self.master_account.write(_master_account);
 
         _update_whitelisted_contracts(ref self, _whitelisted_contracts);
         _update_whitelisted_calls(ref self, _whitelisted_calls);
-
     }
 
     #[external(v0)]
     impl MasterControlImpl of interface::IMasterControl<ContractState> {
-        fn update_whitelisted_contracts(ref self: ContractState, data: Array<(ContractAddress, bool)>) {
+        fn update_whitelisted_contracts(
+            ref self: ContractState, data: Array<(ContractAddress, bool)>
+        ) {
             assert_only_master(@self);
             _update_whitelisted_contracts(ref self, data);
         }
 
-        fn update_whitelisted_calls(ref self: ContractState, data: Array<(ContractAddress, felt252, bool)>) {
+        fn update_whitelisted_calls(
+            ref self: ContractState, data: Array<(ContractAddress, felt252, bool)>
+        ) {
             assert_only_master(@self);
             _update_whitelisted_calls(ref self, data);
         }
@@ -247,12 +249,15 @@ mod Account {
     }
 
 
-
     #[internal]
-    fn _update_whitelisted_calls(ref self: ContractState, mut data: Array<(ContractAddress, felt252, bool)>) {
+    fn _update_whitelisted_calls(
+        ref self: ContractState, mut data: Array<(ContractAddress, felt252, bool)>
+    ) {
         loop {
             match data.pop_front() {
-                Option::Some((addr, selector, value)) => {
+                Option::Some((
+                    addr, selector, value
+                )) => {
                     _update_whitelisted_call(ref self, addr, selector, value);
                 },
                 Option::None(_) => {
@@ -264,10 +269,14 @@ mod Account {
 
 
     #[internal]
-    fn _update_whitelisted_contracts(ref self: ContractState, mut data: Array<(ContractAddress, bool)>) {
+    fn _update_whitelisted_contracts(
+        ref self: ContractState, mut data: Array<(ContractAddress, bool)>
+    ) {
         loop {
             match data.pop_front() {
-                Option::Some((addr,value)) => {
+                Option::Some((
+                    addr, value
+                )) => {
                     _update_whitelisted_contract(ref self, addr, value);
                 },
                 Option::None(_) => {
@@ -287,25 +296,26 @@ mod Account {
 
     #[internal]
     #[inline(always)]
-    fn _update_whitelisted_call(ref self: ContractState, addr: ContractAddress, selector: felt252, value: bool) {
+    fn _update_whitelisted_call(
+        ref self: ContractState, addr: ContractAddress, selector: felt252, value: bool
+    ) {
         self.whitelisted_calls.write((addr, selector), value);
     }
 
 
     #[internal]
     fn _is_whitelisted_contract(self: @ContractState, addr: ContractAddress) -> bool {
-        let mut hard_whitelist: Array::<ContractAddress> = array![
-            
-            //////////////////////////////////////////////////////
-            // hardccoded whitelists should be added here for gas
-            // efficiency. Note that this cannot be overriden by
-            // the master account so careful consideration should
-            // be taken when adding items to this list.
-            //
-            // The addresses that will be called most frequently
-            // should be included at the top of the list.
-            //////////////////////////////////////////////////////
-            
+        let mut hard_whitelist: Array::<ContractAddress> = array![ //
+        ///////////////////////////////////////////////////////
+        // hardcoded whitelists should be added here for gas
+        // efficiency. Note that this cannot be overriden by
+        // the master account so careful consideration should
+        // be taken when adding items to this list.
+        //
+        // The addresses that will be called most frequently
+        // should be included at the top of the list.
+        //////////////////////////////////////////////////////
+
         ];
         let is_hard_whitelisted = loop {
             match hard_whitelist.pop_front() {
@@ -329,25 +339,27 @@ mod Account {
 
 
     #[internal]
-    fn _is_whitelisted_call(self: @ContractState, addr: ContractAddress, selector: felt252) -> bool {
+    fn _is_whitelisted_call(
+        self: @ContractState, addr: ContractAddress, selector: felt252
+    ) -> bool {
+        let mut hard_whitelist: Array::<(ContractAddress, felt252)> = array![ //
+        //////////////////////////////////////////////////////
+        // hardcoded whitelists should be added here for gas 
+        // efficiency. Note that this cannot be overriden by
+        // the master account so careful consideration should
+        // be taken when adding items to this list.
+        //
+        // The items that will be called most frequently should
+        // be included at the top of the list.
+        // 
+        //////////////////////////////////////////////////////
 
-        let mut hard_whitelist: Array::<(ContractAddress, felt252)> = array![
-
-            //////////////////////////////////////////////////////
-            // hardccoded whitelists should be added here for gas 
-            // efficiency. Note that this cannot be overriden by
-            // the master account so careful consideration should
-            // be taken when adding items to this list.
-            //
-            // The items that will be called most frequently should
-            // be included at the top of the list.
-            // 
-            //////////////////////////////////////////////////////
-            
         ];
         let is_hard_whitelisted = loop {
             match hard_whitelist.pop_front() {
-                Option::Some((_addr, _selector)) => {
+                Option::Some((
+                    _addr, _selector
+                )) => {
                     if _addr == addr && _selector == selector {
                         break true;
                     }
@@ -363,7 +375,6 @@ mod Account {
         }
         self.whitelisted_calls.read((addr, selector))
     }
-
 
 
     #[internal]
@@ -389,7 +400,7 @@ mod Account {
 
         if !(_is_whitelisted_contract(self, to) || _is_whitelisted_call(self, to, selector)) {
             assert(false, 'Account: Permission denied');
-        } 
+        }
 
         starknet::call_contract_syscall(to, selector, calldata.span()).unwrap_syscall()
     }

@@ -7,8 +7,7 @@ use starknet::testing;
 use arcade_account::Account;
 use arcade_account::TRANSACTION_VERSION;
 use arcade_account::tests::utils::helper_contracts::{
-    ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait,
-    simple_test_contract, 
+    ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait, simple_test_contract,
 };
 use arcade_account::tests::utils;
 
@@ -52,12 +51,10 @@ fn SIGNED_TX_DATA() -> SignedTransactionData {
 // Helpers
 //
 
-
-
 fn deploy_simple_test_contract() -> ISimpleTestContractDispatcher {
     let mut calldata = array![];
     let address = utils::deploy(simple_test_contract::TEST_CLASS_HASH, calldata);
-    ISimpleTestContractDispatcher { contract_address: address}
+    ISimpleTestContractDispatcher { contract_address: address }
 }
 
 
@@ -67,12 +64,12 @@ fn deploy_arcade_account(data: Option<@SignedTransactionData>) -> ContractAddres
 
     let mut calldata = array![];
     let mut public_key = PUBLIC_KEY;
-    
+
     if data.is_some() {
         // set public key
         let _data = data.unwrap();
-        public_key = *_data.public_key; 
-                    
+        public_key = *_data.public_key;
+
         // Set the signature and transaction hash
         let mut signature = array![];
         signature.append(*_data.r);
@@ -80,17 +77,15 @@ fn deploy_arcade_account(data: Option<@SignedTransactionData>) -> ContractAddres
         testing::set_signature(signature.span());
         testing::set_transaction_hash(*_data.transaction_hash);
     }
-  
 
     // add constructor parameters to calldata
     Serde::serialize(@public_key, ref calldata);
     Serde::serialize(@starknet::get_contract_address(), ref calldata);
     Serde::serialize(@array![(0x99, true)], ref calldata);
-    Serde::serialize(@array![(0x99,0x99, true)], ref calldata);
-   
+    Serde::serialize(@array![(0x99, 0x99, true)], ref calldata);
+
     // Deploy the account contract
     utils::deploy(AA_CLASS_HASH(), calldata)
-   
 }
 
 
@@ -106,17 +101,15 @@ mod account_generic_tests {
 
     use arcade_account::Account;
     use arcade_account::account::interface::{
-        AccountABIDispatcher,AccountABIDispatcherTrait,
-        AccountCamelABIDispatcher, AccountCamelABIDispatcherTrait,
-        IMasterControlDispatcher, IMasterControlDispatcherTrait,
+        AccountABIDispatcher, AccountABIDispatcherTrait, AccountCamelABIDispatcher,
+        AccountCamelABIDispatcherTrait, IMasterControlDispatcher, IMasterControlDispatcherTrait,
     };
     use arcade_account::account::interface::Call;
     use arcade_account::account::interface::ISRC6_ID;
     use arcade_account::QUERY_VERSION;
     use arcade_account::TRANSACTION_VERSION;
     use arcade_account::tests::utils::helper_contracts::{
-        ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait,
-        simple_test_contract, 
+        ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait, simple_test_contract,
     };
     use arcade_account::introspection::interface::ISRC5_ID;
     use super::{deploy_arcade_account, deploy_simple_test_contract};
@@ -129,7 +122,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_deploy() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         assert(arcade_account.get_public_key() == PUBLIC_KEY, 'Should return public key');
@@ -142,8 +135,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_supports_interface() {
-
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -158,8 +150,9 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_supportsInterface() {
-
-        let arcade_account = AccountCamelABIDispatcher { contract_address: deploy_arcade_account(Option::None(())) };
+        let arcade_account = AccountCamelABIDispatcher {
+            contract_address: deploy_arcade_account(Option::None(()))
+        };
         let supports_default_interface = arcade_account.supportsInterface(ISRC5_ID);
         assert(supports_default_interface, 'Should support base interface');
 
@@ -185,7 +178,7 @@ mod account_generic_tests {
         bad_signature.append(0x987);
         bad_signature.append(0x564);
 
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -197,7 +190,6 @@ mod account_generic_tests {
         let is_valid = arcade_account.is_valid_signature(hash, bad_signature);
         assert(is_valid == 0, 'Should reject invalid signature');
     }
-
 
 
     #[test]
@@ -214,8 +206,8 @@ mod account_generic_tests {
         bad_signature.append(0x987);
         bad_signature.append(0x564);
 
-        let arcade_account = AccountCamelABIDispatcher { 
-            contract_address: deploy_arcade_account(Option::None(())) 
+        let arcade_account = AccountCamelABIDispatcher {
+            contract_address: deploy_arcade_account(Option::None(()))
         };
         arcade_account.setPublicKey(data.public_key);
 
@@ -233,7 +225,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_validate_deploy() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
 
@@ -241,7 +233,8 @@ mod account_generic_tests {
         // values are already integrated in the tx hash. The passed arguments in this
         // testing context are decoupled from the signature and have no effect on the test.
         assert(
-            arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY) == starknet::VALIDATED,
+            arcade_account
+                .__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY) == starknet::VALIDATED,
             'Should validate correctly'
         );
     }
@@ -254,7 +247,7 @@ mod account_generic_tests {
         let mut data = SIGNED_TX_DATA();
         data.transaction_hash += 1;
 
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@data))
         };
 
@@ -266,7 +259,7 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: invalid signature', 'ENTRYPOINT_FAILED'))]
     fn test_validate_deploy_invalid_signature_length() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
         let mut signature = array![];
@@ -281,7 +274,7 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: invalid signature', 'ENTRYPOINT_FAILED'))]
     fn test_validate_deploy_empty_signature() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
         let empty_sig = array![];
@@ -294,7 +287,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_validate_declare() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
 
@@ -313,7 +306,7 @@ mod account_generic_tests {
     fn test_validate_declare_invalid_signature_data() {
         let mut data = SIGNED_TX_DATA();
         data.transaction_hash += 1;
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@data))
         };
 
@@ -325,7 +318,7 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: invalid signature', 'ENTRYPOINT_FAILED'))]
     fn test_validate_declare_invalid_signature_length() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
         let mut signature = array![];
@@ -340,7 +333,7 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: invalid signature', 'ENTRYPOINT_FAILED'))]
     fn test_validate_declare_empty_signature() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
         let empty_sig = array![];
@@ -352,25 +345,23 @@ mod account_generic_tests {
 
     fn _execute_with_version(version: Option<felt252>) {
         let data = SIGNED_TX_DATA();
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@data))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
         // whitelist simple_test_contract
-        let master_control_dispatcher =IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        master_control_dispatcher.update_whitelisted_contracts(
-            array![(simple_test_contract.contract_address, true)]
-        );
-
+        master_control_dispatcher
+            .update_whitelisted_contracts(array![(simple_test_contract.contract_address, true)]);
 
         // Craft call and add to calls array
         let mut calldata = array![true.into()];
         let call = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_cold_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_cold_selector(),
             calldata: calldata
         };
         let calls = array![call];
@@ -390,7 +381,6 @@ mod account_generic_tests {
         let mut call_serialized_retval = *ret.at(0);
         let call_retval = Serde::<bool>::deserialize(ref call_serialized_retval);
         assert(call_retval.unwrap(), 'Should have succeeded');
-
     }
 
     #[test]
@@ -416,17 +406,17 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: Permission denied', 'ENTRYPOINT_FAILED'))]
     fn test_execute_no_whitelist() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
-        
+
         // Craft call and add to calls array
         let mut calldata = array![true.into()];
         let call = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_cold_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_cold_selector(),
             calldata: calldata
         };
         let calls = array![call];
@@ -435,16 +425,17 @@ mod account_generic_tests {
     }
 
 
-
     #[test]
     #[available_gas(2000000)]
     fn test_validate() {
         let calls = array![];
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
 
-        assert(arcade_account.__validate__(calls) == starknet::VALIDATED, 'Should validate correctly');
+        assert(
+            arcade_account.__validate__(calls) == starknet::VALIDATED, 'Should validate correctly'
+        );
     }
 
     #[test]
@@ -454,8 +445,8 @@ mod account_generic_tests {
         let calls = array![];
         let mut data = SIGNED_TX_DATA();
         data.transaction_hash += 1;
-        
-        let arcade_account = AccountABIDispatcher { 
+
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@data))
         };
         arcade_account.__validate__(calls);
@@ -464,18 +455,17 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_multicall() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
         // whitelist simple_test_contract
-        let master_control_dispatcher =IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        master_control_dispatcher.update_whitelisted_contracts(
-            array![(simple_test_contract.contract_address, true)]
-        );
+        master_control_dispatcher
+            .update_whitelisted_contracts(array![(simple_test_contract.contract_address, true)]);
 
         let mut calls = array![];
 
@@ -484,18 +474,18 @@ mod account_generic_tests {
         Serde::serialize(@true, ref calldata1);
 
         let call1 = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_cold_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_cold_selector(),
             calldata: calldata1
         };
 
         // Craft call2
-        let mut calldata2= array![];
+        let mut calldata2 = array![];
         Serde::serialize(@true, ref calldata2);
 
         let call2 = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_hot_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_hot_selector(),
             calldata: calldata2
         };
 
@@ -507,7 +497,6 @@ mod account_generic_tests {
         // Assert that call was successful
         assert(simple_test_contract.is_cold() == true, 'Should be true');
         assert(simple_test_contract.is_hot() == true, 'Should be true');
-        
 
         // Test return value
         let mut call1_serialized_retval = *ret.at(0);
@@ -522,7 +511,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_multicall_zero_calls() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         let mut calls = array![];
@@ -540,7 +529,6 @@ mod account_generic_tests {
         testing::set_caller_address(caller);
         let arcade_state = Account::contract_state_for_testing();
         Account::SRC6Impl::__execute__(@arcade_state, calls);
-
     }
 
     //
@@ -550,10 +538,9 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_public_key_setter_and_getter() {
-
         testing::set_contract_address(AA_ADDRESS());
 
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         arcade_account.set_public_key(NEW_PUBKEY);
@@ -564,9 +551,9 @@ mod account_generic_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED' ))]
+    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED'))]
     fn test_public_key_setter_different_account() {
-        let arcade_account = AccountABIDispatcher { 
+        let arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -582,10 +569,9 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_public_key_setter_and_getter_camel() {
-
         testing::set_contract_address(AA_ADDRESS());
 
-        let arcade_account = AccountCamelABIDispatcher { 
+        let arcade_account = AccountCamelABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         arcade_account.setPublicKey(NEW_PUBKEY);
@@ -597,16 +583,15 @@ mod account_generic_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED' ))]
+    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED'))]
     fn test_public_key_setter_different_account_camel() {
-        let arcade_account = AccountCamelABIDispatcher { 
+        let arcade_account = AccountCamelABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         testing::set_contract_address(AA_ADDRESS());
         arcade_account.setPublicKey(NEW_PUBKEY);
     }
-
 
 
     //
@@ -618,7 +603,10 @@ mod account_generic_tests {
     fn test_initializer() {
         let mut arcade_state = Account::contract_state_for_testing();
         Account::InternalImpl::initializer(ref arcade_state, PUBLIC_KEY);
-        assert(Account::PublicKeyImpl::get_public_key(@arcade_state) == PUBLIC_KEY, 'Should return public key');
+        assert(
+            Account::PublicKeyImpl::get_public_key(@arcade_state) == PUBLIC_KEY,
+            'Should return public key'
+        );
     }
 
     #[test]
@@ -633,7 +621,6 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: unauthorized', ))]
     fn test_assert_only_master_false() {
-
         let other = contract_address_const::<0x4567>();
         testing::set_caller_address(other);
 
@@ -659,22 +646,25 @@ mod account_generic_tests {
         invalid_length_signature.append(0x987);
 
         let mut arcade_state = Account::contract_state_for_testing();
-    
+
         Account::PublicKeyImpl::set_public_key(ref arcade_state, data.public_key);
 
-        let is_valid = Account::InternalImpl::_is_valid_signature(@arcade_state,hash, good_signature.span());
+        let is_valid = Account::InternalImpl::_is_valid_signature(
+            @arcade_state, hash, good_signature.span()
+        );
         assert(is_valid, 'Should accept valid signature');
 
-        let is_valid = Account::InternalImpl::_is_valid_signature(@arcade_state, hash, bad_signature.span());
+        let is_valid = Account::InternalImpl::_is_valid_signature(
+            @arcade_state, hash, bad_signature.span()
+        );
         assert(!is_valid, 'Should reject invalid signature');
 
-        let is_valid = Account::InternalImpl::_is_valid_signature(@arcade_state, hash, invalid_length_signature.span());
+        let is_valid = Account::InternalImpl::_is_valid_signature(
+            @arcade_state, hash, invalid_length_signature.span()
+        );
         assert(!is_valid, 'Should reject invalid length');
     }
 }
-
-
-
 
 
 #[cfg(test)]
@@ -688,41 +678,37 @@ mod account_master_control_tests {
 
     use arcade_account::Account;
     use arcade_account::account::interface::{
-        AccountABIDispatcher,AccountABIDispatcherTrait,
-        IMasterControlDispatcher, IMasterControlDispatcherTrait,
+        AccountABIDispatcher, AccountABIDispatcherTrait, IMasterControlDispatcher,
+        IMasterControlDispatcherTrait,
     };
     use arcade_account::account::interface::Call;
     use arcade_account::tests::utils::helper_contracts::{
-        ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait,
-        simple_test_contract, 
+        ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait, simple_test_contract,
     };
 
 
-    
     #[test]
-    #[available_gas(2000000)] 
+    #[available_gas(2000000)]
     fn test_update_whitelisted_contracts() {
-        let mut arcade_account = AccountABIDispatcher { 
+        let mut arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
 
         // whitelist simple_test_contract
-        let master_control_dispatcher = IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        master_control_dispatcher.update_whitelisted_contracts(
-            array![(simple_test_contract.contract_address, true)]
-        );
-
+        master_control_dispatcher
+            .update_whitelisted_contracts(array![(simple_test_contract.contract_address, true)]);
 
         // Craft call    
-        let mut calldata= array![];
+        let mut calldata = array![];
         Serde::serialize(@true, ref calldata);
         let call = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_hot_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_hot_selector(),
             calldata: calldata
         };
 
@@ -740,11 +726,10 @@ mod account_master_control_tests {
 
 
     #[test]
-    #[available_gas(2000000)] 
-    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED' ))]
+    #[available_gas(2000000)]
+    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED'))]
     fn test_update_whitelisted_contracts_unauthorized() {
-
-        let mut arcade_account = AccountABIDispatcher { 
+        let mut arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -753,42 +738,44 @@ mod account_master_control_tests {
         // change caller address
         testing::set_contract_address(contract_address_const::<0x123>());
         // whitelist simple_test_contract
-        let master_control_dispatcher = IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        master_control_dispatcher.update_whitelisted_contracts(
-            array![(simple_test_contract.contract_address, true)]
-        );
+        master_control_dispatcher
+            .update_whitelisted_contracts(array![(simple_test_contract.contract_address, true)]);
     }
 
 
     #[test]
-    #[available_gas(2000000)] 
+    #[available_gas(2000000)]
     fn test_update_whitelisted_calls() {
-        let mut arcade_account = AccountABIDispatcher { 
+        let mut arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
 
         // whitelist simple_test_contract
-        let master_control_dispatcher = IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        master_control_dispatcher.update_whitelisted_calls(
-            array![(
-                simple_test_contract.contract_address, 
-                simple_test_contract::SelectorImpl::set_hot_selector(),
-                true
-            )]
-        );
+        master_control_dispatcher
+            .update_whitelisted_calls(
+                array![
+                    (
+                        simple_test_contract.contract_address,
+                        simple_test_contract::SelectorImpl::set_hot_selector(),
+                        true
+                    )
+                ]
+            );
 
         // Craft call    
-        let mut calldata= array![];
+        let mut calldata = array![];
         Serde::serialize(@true, ref calldata);
         let call = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_hot_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_hot_selector(),
             calldata: calldata
         };
 
@@ -798,7 +785,6 @@ mod account_master_control_tests {
         // Assert that call was successful
         assert(simple_test_contract.is_hot() == true, 'Should be true');
 
-
         // Test return value
         let mut call_serialized_retval = *ret.at(0);
         let call_retval = Serde::<bool>::deserialize(ref call_serialized_retval);
@@ -807,53 +793,53 @@ mod account_master_control_tests {
 
 
     #[test]
-    #[available_gas(2000000)] 
-    #[should_panic(expected: ('Account: Permission denied', 'ENTRYPOINT_FAILED' ))]
+    #[available_gas(2000000)]
+    #[should_panic(expected: ('Account: Permission denied', 'ENTRYPOINT_FAILED'))]
     fn test_update_whitelisted_calls_only_whitelists_call() {
         // Ensure that the update_whitelisted_calls function doesn't
         // whitelist the entire contract
-        let mut arcade_account = AccountABIDispatcher { 
+        let mut arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
 
         // whitelist simple_test_contract
-        let master_control_dispatcher = IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        master_control_dispatcher.update_whitelisted_calls(
-            array![(
-                simple_test_contract.contract_address, 
-                // set_hot selector is whitelisted but set_cold is called below
-                simple_test_contract::SelectorImpl::set_hot_selector(),
-                true
-            )]
-        );
+        master_control_dispatcher
+            .update_whitelisted_calls(
+                array![
+                    (
+                        simple_test_contract.contract_address,
+                        // set_hot selector is whitelisted but set_cold is called below
+                        simple_test_contract::SelectorImpl::set_hot_selector(),
+                        true
+                    )
+                ]
+            );
 
         // Craft call    
-        let mut calldata= array![];
+        let mut calldata = array![];
         Serde::serialize(@true, ref calldata);
         let call = Call {
-            to: simple_test_contract.contract_address, 
+            to: simple_test_contract.contract_address,
             //set_hot selector was whitelisted but set_cold is being called
-            selector: simple_test_contract::SelectorImpl::set_cold_selector(), 
+            selector: simple_test_contract::SelectorImpl::set_cold_selector(),
             calldata: calldata
         };
 
         // execute call
         arcade_account.__execute__(array![call]);
-
     }
-
 
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED' ))]
+    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED'))]
     fn test_update_whitelisted_calls_unauthorized() {
-
-        let mut arcade_account = AccountABIDispatcher { 
+        let mut arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -862,45 +848,45 @@ mod account_master_control_tests {
         // change caller address
         testing::set_contract_address(contract_address_const::<0x123>());
         // whitelist simple_test_contract
-        let master_control_dispatcher = IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        master_control_dispatcher.update_whitelisted_calls(
-            array![(
-                simple_test_contract.contract_address, 
-                simple_test_contract::SelectorImpl::set_hot_selector(),
-                true
-            )]
-        );
+        master_control_dispatcher
+            .update_whitelisted_calls(
+                array![
+                    (
+                        simple_test_contract.contract_address,
+                        simple_test_contract::SelectorImpl::set_hot_selector(),
+                        true
+                    )
+                ]
+            );
     }
 
 
-
     #[test]
-    #[available_gas(2000000)] 
+    #[available_gas(2000000)]
     fn test_function_call() {
-        let mut arcade_account = AccountABIDispatcher { 
+        let mut arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
 
         // whitelist simple_test_contract
-        let master_control_dispatcher = IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        
+
         // Craft call    
-        let mut calldata= array![];
+        let mut calldata = array![];
         Serde::serialize(@true, ref calldata);
         let call = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_hot_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_hot_selector(),
             calldata: calldata
         };
-        let ret = master_control_dispatcher.function_call(
-            array![call]
-        );
+        let ret = master_control_dispatcher.function_call(array![call]);
 
         // Assert that call was successful
         assert(simple_test_contract.is_hot() == true, 'Should be true');
@@ -912,35 +898,32 @@ mod account_master_control_tests {
     }
 
 
-
     #[test]
-    #[available_gas(2000000)] 
-    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED' ))]
+    #[available_gas(2000000)]
+    #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED'))]
     fn test_function_call_unauthorized() {
-        let mut arcade_account = AccountABIDispatcher { 
+        let mut arcade_account = AccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
         let simple_test_contract = deploy_simple_test_contract();
 
         // whitelist simple_test_contract
-        let master_control_dispatcher = IMasterControlDispatcher { 
+        let master_control_dispatcher = IMasterControlDispatcher {
             contract_address: arcade_account.contract_address
         };
-        
+
         // Craft call    
-        let mut calldata= array![];
+        let mut calldata = array![];
         Serde::serialize(@true, ref calldata);
         let call = Call {
-            to: simple_test_contract.contract_address, 
-            selector: simple_test_contract::SelectorImpl::set_hot_selector(), 
+            to: simple_test_contract.contract_address,
+            selector: simple_test_contract::SelectorImpl::set_hot_selector(),
             calldata: calldata
         };
 
         // change caller address
         testing::set_contract_address(contract_address_const::<0x123>());
-        let ret = master_control_dispatcher.function_call(
-            array![call]
-        );
+        let ret = master_control_dispatcher.function_call(array![call]);
     }
 }
