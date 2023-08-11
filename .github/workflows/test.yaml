@@ -1,0 +1,37 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 1 - Check out main branch
+        uses: actions/checkout@v3
+      - name: Step 2 - Getting scarb
+        uses: software-mansion/setup-scarb@v1
+      - name: Step 3 - Trying to build
+        run: scarb build
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 1 - Check out main branch
+        uses: actions/checkout@v3
+      - name: Step 2 - Getting scarb
+        uses: software-mansion/setup-scarb@v1
+      - name: Step 3 - Running tests
+        run: scarb test
+
+  check-format:
+    name: check-format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 1 - Check out main branch
+        uses: actions/checkout@v3
+      - name: Step 2 - Getting scarb
+        uses: software-mansion/setup-scarb@v1
+      - name: Step 3 - Checking formatting
+        run: scarb fmt --check
