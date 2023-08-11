@@ -1,4 +1,3 @@
-
 #[starknet::interface]
 trait ISimpleTestContract<TState> {
     fn is_cold(self: @TState) -> bool;
@@ -11,7 +10,6 @@ trait ISimpleTestContract<TState> {
 
 #[starknet::contract]
 mod simple_test_contract {
-    
     #[storage]
     struct Storage {
         cold: bool,
@@ -22,8 +20,7 @@ mod simple_test_contract {
     fn constructor(ref self: ContractState) {}
 
     #[external(v0)]
-    impl SimpleTestContractImpl of super::ISimpleTestContract<ContractState>{
-
+    impl SimpleTestContractImpl of super::ISimpleTestContract<ContractState> {
         fn is_cold(self: @ContractState) -> bool {
             self.cold.read()
         }
@@ -40,11 +37,11 @@ mod simple_test_contract {
             true
         }
     }
-    
+
     #[generate_trait]
     impl SelectorImpl of SelectorTrait {
         fn set_cold_selector() -> felt252 {
-           0x14a24dde590d15d7b2badc175b57ed320ecd5aeedeecdbf37bb416468a803f4
+            0x14a24dde590d15d7b2badc175b57ed320ecd5aeedeecdbf37bb416468a803f4
         }
 
         fn set_hot_selector() -> felt252 {
