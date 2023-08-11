@@ -2,15 +2,12 @@ use debug::PrintTrait;
 use serde::Serde;
 use array::ArrayTrait;
 use starknet::ContractAddress;
-use starknet::contract_address::{
-    contract_address_const
-};
+use starknet::contract_address::{contract_address_const};
 
 /// This script is used to generate the calldata for the constructor of the
 /// arcade contract contract for deployment. The logs of the serialized calldata
 /// are printed then used to deploy the contract. see `../scripts/deploy.sh` for more info.
 fn main() {
-    
     let mut calldata = array![];
 
     // set constructor parameters
@@ -35,5 +32,4 @@ fn main() {
             }
         };
     };
-
 }
