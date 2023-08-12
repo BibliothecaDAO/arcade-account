@@ -13,6 +13,8 @@ jobs:
         uses: software-mansion/setup-scarb@v1
       - name: Step 3 - Trying to build
         run: scarb build
+      - name: Step 3 - Try to build deployment package
+        run: cd deployment && scarb build
 
   test:
     name: test
