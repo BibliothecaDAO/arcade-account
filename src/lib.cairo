@@ -97,6 +97,10 @@ mod Account {
             assert_only_master(@self);
             _execute_master_calls(@self, data)
         }
+
+        fn get_master_account(ref self: ContractState) -> ContractAddress {
+            self.master_account.read()
+        }
     }
 
     //
