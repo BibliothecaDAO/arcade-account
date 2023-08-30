@@ -100,18 +100,22 @@ mod account_generic_tests {
     use starknet::testing;
 
     use arcade_account::Account;
+
     use arcade_account::account::interface::{
-        AccountABIDispatcher, AccountABIDispatcherTrait, AccountCamelABIDispatcher,
-        AccountCamelABIDispatcherTrait, IMasterControlDispatcher, IMasterControlDispatcherTrait,
+        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait
     };
-    use arcade_account::account::interface::Call;
-    use arcade_account::account::interface::ISRC6_ID;
+    use openzeppelin::account::interface::{
+        AccountABIDispatcher, AccountABIDispatcherTrait, AccountCamelABIDispatcher,
+        AccountCamelABIDispatcherTrait,
+    };
+    use openzeppelin::account::interface::Call;
+    use openzeppelin::account::interface::ISRC6_ID;
     use arcade_account::QUERY_VERSION;
     use arcade_account::TRANSACTION_VERSION;
     use arcade_account::tests::utils::helper_contracts::{
         ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait, simple_test_contract,
     };
-    use arcade_account::introspection::interface::ISRC5_ID;
+    use openzeppelin::introspection::interface::ISRC5_ID;
     use super::{deploy_arcade_account, deploy_simple_test_contract};
     use super::{PUBLIC_KEY, NEW_PUBKEY, SALT, AA_CLASS_HASH, AA_ADDRESS, SIGNED_TX_DATA};
 
@@ -522,7 +526,7 @@ mod account_generic_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('Account: invalid caller', ))]
+    #[should_panic(expected: ('Account: invalid caller',))]
     fn test_account_called_from_contract() {
         let calls = array![];
         let caller = contract_address_const::<0x123>();
@@ -619,7 +623,7 @@ mod account_generic_tests {
 
     #[test]
     #[available_gas(2000000)]
-    #[should_panic(expected: ('Account: unauthorized', ))]
+    #[should_panic(expected: ('Account: unauthorized',))]
     fn test_assert_only_master_false() {
         let other = contract_address_const::<0x4567>();
         testing::set_caller_address(other);
@@ -678,8 +682,11 @@ mod account_master_control_tests {
 
     use arcade_account::Account;
     use arcade_account::account::interface::{
-        AccountABIDispatcher, AccountABIDispatcherTrait, IMasterControlDispatcher,
-        IMasterControlDispatcherTrait,
+        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait
+    };
+    use openzeppelin::account::interface::{
+        AccountABIDispatcher, AccountABIDispatcherTrait, AccountCamelABIDispatcher,
+        AccountCamelABIDispatcherTrait,
     };
     use arcade_account::account::interface::Call;
     use arcade_account::tests::utils::helper_contracts::{

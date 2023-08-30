@@ -6,7 +6,6 @@ use starknet::account::Call;
 
 
 mod account;
-mod introspection;
 mod utils;
 mod tests;
 
@@ -41,10 +40,12 @@ mod Account {
     use zeroable::Zeroable;
     use starknet::contract_address::contract_address_const;
 
-    use arcade_account::account::interface;
-    use arcade_account::introspection::interface::ISRC5;
-    use arcade_account::introspection::interface::ISRC5Camel;
-    use arcade_account::introspection::src5::SRC5;
+    use arcade_account::account::interface::{IMasterControl};
+
+    use openzeppelin::account::interface;
+    use openzeppelin::introspection::interface::ISRC5;
+    use openzeppelin::introspection::interface::ISRC5Camel;
+    use openzeppelin::introspection::src5::SRC5;
 
     use super::Call;
     use super::QUERY_VERSION;
@@ -77,7 +78,7 @@ mod Account {
     }
 
     #[external(v0)]
-    impl MasterControlImpl of interface::IMasterControl<ContractState> {
+    impl MasterControlImpl of IMasterControl<ContractState> {
         fn update_whitelisted_contracts(
             ref self: ContractState, data: Array<(ContractAddress, bool)>
         ) {
