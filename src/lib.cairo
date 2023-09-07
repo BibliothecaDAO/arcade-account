@@ -6,7 +6,6 @@ use starknet::account::Call;
 
 
 mod account;
-mod introspection;
 mod utils;
 mod tests;
 
@@ -14,6 +13,9 @@ const TRANSACTION_VERSION: felt252 = 1;
 
 // 2**128 + TRANSACTION_VERSION
 const QUERY_VERSION: felt252 = 340282366920938463463374607431768211457;
+
+const ARCADE_ACCOUNT_ID: felt252 = 22227699753170493970302265346292000442692;
+
 
 trait PublicKeyTrait<TState> {
     fn set_public_key(ref self: TState, new_public_key: felt252);
@@ -41,14 +43,17 @@ mod Account {
     use zeroable::Zeroable;
     use starknet::contract_address::contract_address_const;
 
-    use arcade_account::account::interface;
-    use arcade_account::introspection::interface::ISRC5;
-    use arcade_account::introspection::interface::ISRC5Camel;
-    use arcade_account::introspection::src5::SRC5;
+    use arcade_account::account::interface::{IMasterControl};
+
+    use openzeppelin::account::interface;
+    use openzeppelin::introspection::interface::ISRC5;
+    use openzeppelin::introspection::interface::ISRC5Camel;
+    use openzeppelin::introspection::src5::SRC5;
 
     use super::Call;
     use super::QUERY_VERSION;
     use super::TRANSACTION_VERSION;
+    use super::ARCADE_ACCOUNT_ID;
 
     use arcade_account::utils::{selectors, contracts};
 
@@ -74,10 +79,13 @@ mod Account {
 
         _update_whitelisted_contracts(ref self, _whitelisted_contracts);
         _update_whitelisted_calls(ref self, _whitelisted_calls);
+
+        let mut unsafe_state = SRC5::unsafe_new_contract_state();
+        SRC5::InternalTrait::register_interface(ref unsafe_state, ARCADE_ACCOUNT_ID);
     }
 
     #[external(v0)]
-    impl MasterControlImpl of interface::IMasterControl<ContractState> {
+    impl MasterControlImpl of IMasterControl<ContractState> {
         fn update_whitelisted_contracts(
             ref self: ContractState, data: Array<(ContractAddress, bool)>
         ) {
@@ -95,6 +103,10 @@ mod Account {
         fn function_call(ref self: ContractState, data: Array<Call>) -> Array<Span<felt252>> {
             assert_only_master(@self);
             _execute_master_calls(@self, data)
+        }
+
+        fn get_master_account(ref self: ContractState) -> ContractAddress {
+            self.master_account.read()
         }
     }
 

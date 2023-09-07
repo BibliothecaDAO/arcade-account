@@ -5,8 +5,6 @@
 
 > **Disclaimer:** This feature remains in its experimental phase and hasn't undergone auditing. Its use is entirely at your own discretion and risk. As it stands, Arcade Account is a work-in-progress. Your feedback is valuable to us in its continued development!
 
-> Currently, the Arcade Account is a derivative of the Open Zeppelin Account contract. However, the original repository's lack of Scarb support necessitated a direct integration of its content here. This is a stopgap measure, and future updates will offer a more refined solution.
-
 ### What is an Arcade Account
 
 An Arcade Account is an enhanced version of the standard Starknet Account, furnished with several distinctive features:
