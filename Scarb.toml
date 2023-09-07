@@ -9,3 +9,5 @@ starknet = "2.1.1"
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts", rev = "05429e4" }
 
 [[target.starknet-contract]]
+
+[lib]
