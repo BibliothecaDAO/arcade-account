@@ -41,3 +41,9 @@ This enables the potential for frequent deployment of Arcade Accounts by users d
 - [ ] Auto top up of eth from Master
 - [ ] General feedback and improvements around security
 - [ ] Add ability for Master Account to give complex permissions. EG: Can transfer an ERC20 token to a specific address
+
+
+starkli declare target/dev/arcade_account_Account.sierra.json --account ./account --keystore ./keys
+
+# v0.1.0 hash
+0x00bf5a9e6533e70a811a622eaa402724d290898c59fe7627f523893f2b2a0644

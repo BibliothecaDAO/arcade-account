@@ -68,17 +68,10 @@ mod Account {
 
     #[constructor]
     fn constructor(
-        ref self: ContractState,
-        _public_key: felt252,
-        _master_account: ContractAddress,
-        _whitelisted_contracts: Array<(ContractAddress, bool)>,
-        _whitelisted_calls: Array<(ContractAddress, felt252, bool)>
+        ref self: ContractState, _public_key: felt252, _master_account: ContractAddress
     ) {
         self.initializer(_public_key);
         self.master_account.write(_master_account);
-
-        _update_whitelisted_contracts(ref self, _whitelisted_contracts);
-        _update_whitelisted_calls(ref self, _whitelisted_calls);
 
         let mut unsafe_state = SRC5::unsafe_new_contract_state();
         SRC5::InternalTrait::register_interface(ref unsafe_state, ARCADE_ACCOUNT_ID);
