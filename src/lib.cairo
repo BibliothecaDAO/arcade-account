@@ -411,7 +411,7 @@ mod Account {
             assert(false, 'Account: Permission denied');
         }
 
-        starknet::call_contract_syscall(to, selector, calldata.span()).unwrap()
+        starknet::call_contract_syscall(to, selector, calldata.span()).unwrap_syscall()
     }
 
 
@@ -436,6 +436,6 @@ mod Account {
     #[internal]
     fn _execute_single_master_call(self: @ContractState, call: Call) -> Span<felt252> {
         let Call{to, selector, calldata } = call;
-        starknet::call_contract_syscall(to, selector, calldata.span()).unwrap()
+        starknet::call_contract_syscall(to, selector, calldata.span()).unwrap_syscall()
     }
 }
