@@ -207,7 +207,8 @@ mod Account {
         self: @ContractState,
         class_hash: felt252,
         contract_address_salt: felt252,
-        _public_key: felt252
+        _public_key: felt252,
+        _master_account: ContractAddress
     ) -> felt252 {
         self.validate_transaction()
     }
