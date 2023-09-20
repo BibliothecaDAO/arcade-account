@@ -98,7 +98,7 @@ mod Account {
             _execute_master_calls(@self, data)
         }
 
-        fn get_master_account(ref self: ContractState) -> ContractAddress {
+        fn get_master_account(self: @ContractState) -> ContractAddress {
             self.master_account.read()
         }
     }
