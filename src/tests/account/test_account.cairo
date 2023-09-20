@@ -81,8 +81,6 @@ fn deploy_arcade_account(data: Option<@SignedTransactionData>) -> ContractAddres
     // add constructor parameters to calldata
     Serde::serialize(@public_key, ref calldata);
     Serde::serialize(@starknet::get_contract_address(), ref calldata);
-    Serde::serialize(@array![(0x99, true)], ref calldata);
-    Serde::serialize(@array![(0x99, 0x99, true)], ref calldata);
 
     // Deploy the account contract
     utils::deploy(AA_CLASS_HASH(), calldata)
@@ -102,7 +100,8 @@ mod account_generic_tests {
     use arcade_account::Account;
 
     use arcade_account::account::interface::{
-        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait
+        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait, ArcadeAccountABIDispatcher, ArcadeAccountABIDispatcherTrait, ArcadeAccountCamelABIDispatcher,
+        ArcadeAccountCamelABIDispatcherTrait,
     };
     use openzeppelin::account::interface::{
         AccountABIDispatcher, AccountABIDispatcherTrait, AccountCamelABIDispatcher,
@@ -126,7 +125,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_deploy() {
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         assert(arcade_account.get_public_key() == PUBLIC_KEY, 'Should return public key');
@@ -139,7 +138,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_supports_interface() {
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -182,7 +181,7 @@ mod account_generic_tests {
         bad_signature.append(0x987);
         bad_signature.append(0x564);
 
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -229,7 +228,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_validate_deploy() {
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
 
@@ -238,7 +237,7 @@ mod account_generic_tests {
         // testing context are decoupled from the signature and have no effect on the test.
         assert(
             arcade_account
-                .__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY) == starknet::VALIDATED,
+                .__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address()) == starknet::VALIDATED,
             'Should validate correctly'
         );
     }
@@ -251,11 +250,11 @@ mod account_generic_tests {
         let mut data = SIGNED_TX_DATA();
         data.transaction_hash += 1;
 
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@data))
         };
 
-        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY);
+        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address());
     }
 
 
@@ -263,7 +262,7 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: invalid signature', 'ENTRYPOINT_FAILED'))]
     fn test_validate_deploy_invalid_signature_length() {
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
         let mut signature = array![];
@@ -271,27 +270,27 @@ mod account_generic_tests {
         signature.append(0x1);
         testing::set_signature(signature.span());
 
-        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY);
+        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address());
     }
 
     #[test]
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: invalid signature', 'ENTRYPOINT_FAILED'))]
     fn test_validate_deploy_empty_signature() {
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
         let empty_sig = array![];
 
         testing::set_signature(empty_sig.span());
-        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY);
+        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address());
     }
 
 
     #[test]
     #[available_gas(2000000)]
     fn test_validate_declare() {
-        let arcade_account = AccountABIDispatcher {
+        let arcade_account = ArcadeAccountABIDispatcher {
             contract_address: deploy_arcade_account(Option::Some(@SIGNED_TX_DATA()))
         };
 
