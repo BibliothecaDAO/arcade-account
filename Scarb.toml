@@ -6,7 +6,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.2.0"
-openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts", rev = "7373daa" }
+openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.7.0" }
 
 [[target.starknet-contract]]
 
