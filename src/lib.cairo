@@ -3,7 +3,7 @@ use array::SpanTrait;
 use option::OptionTrait;
 use serde::Serde;
 use starknet::account::Call;
-
+use starknet::ContractAddress;
 
 mod account;
 mod utils;
@@ -92,7 +92,7 @@ mod Account {
     }
 
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl MasterControlImpl of IMasterControl<ContractState> {
         fn update_whitelisted_contracts(
             ref self: ContractState, data: Array<(ContractAddress, bool)>
@@ -251,7 +251,7 @@ mod Account {
             assert(false, 'Account: Permission denied');
         }
 
-        starknet::call_contract_syscall(to, selector, calldata.span()).unwrap()
+        starknet::call_contract_syscall(to, selector, calldata).unwrap()
     }
 
 
@@ -272,6 +272,6 @@ mod Account {
 
     fn _execute_single_master_call(self: @ContractState, call: Call) -> Span<felt252> {
         let Call{to, selector, calldata } = call;
-        starknet::call_contract_syscall(to, selector, calldata.span()).unwrap()
+        starknet::call_contract_syscall(to, selector, calldata).unwrap()
     }
 }

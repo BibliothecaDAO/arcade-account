@@ -19,7 +19,7 @@ mod simple_test_contract {
     #[constructor]
     fn constructor(ref self: ContractState) {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl SimpleTestContractImpl of super::ISimpleTestContract<ContractState> {
         fn is_cold(self: @ContractState) -> bool {
             self.cold.read()

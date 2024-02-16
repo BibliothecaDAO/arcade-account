@@ -100,15 +100,16 @@ mod account_generic_tests {
     use arcade_account::Account;
 
     use arcade_account::account::interface::{
-        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait, ArcadeAccountABIDispatcher, ArcadeAccountABIDispatcherTrait, ArcadeAccountCamelABIDispatcher,
-        ArcadeAccountCamelABIDispatcherTrait,
+        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait,
+        ArcadeAccountABIDispatcher, ArcadeAccountABIDispatcherTrait,
+        ArcadeAccountCamelABIDispatcher, ArcadeAccountCamelABIDispatcherTrait,
     };
-    use openzeppelin::account::interface::{
-        AccountABIDispatcher, AccountABIDispatcherTrait, AccountCamelABIDispatcher,
-        AccountCamelABIDispatcherTrait,
-    };
+    use openzeppelin::account::interface::{AccountABIDispatcher, AccountABIDispatcherTrait};
     use openzeppelin::account::interface::Call;
     use openzeppelin::account::interface::ISRC6_ID;
+    use openzeppelin::introspection::interface::{
+        ISRC5Camel, ISRC5CamelDispatcher, ISRC5CamelDispatcherTrait
+    };
     use arcade_account::QUERY_VERSION;
     use arcade_account::TRANSACTION_VERSION;
     use arcade_account::tests::utils::helper_contracts::{
@@ -153,7 +154,7 @@ mod account_generic_tests {
     #[test]
     #[available_gas(2000000)]
     fn test_supportsInterface() {
-        let arcade_account = AccountCamelABIDispatcher {
+        let arcade_account = ISRC5CamelDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         let supports_default_interface = arcade_account.supportsInterface(ISRC5_ID);
@@ -209,7 +210,7 @@ mod account_generic_tests {
         bad_signature.append(0x987);
         bad_signature.append(0x564);
 
-        let arcade_account = AccountCamelABIDispatcher {
+        let arcade_account = ArcadeAccountCamelABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         arcade_account.setPublicKey(data.public_key);
@@ -237,7 +238,9 @@ mod account_generic_tests {
         // testing context are decoupled from the signature and have no effect on the test.
         assert(
             arcade_account
-                .__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address()) == starknet::VALIDATED,
+                .__validate_deploy__(
+                    AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address()
+                ) == starknet::VALIDATED,
             'Should validate correctly'
         );
     }
@@ -254,7 +257,10 @@ mod account_generic_tests {
             contract_address: deploy_arcade_account(Option::Some(@data))
         };
 
-        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address());
+        arcade_account
+            .__validate_deploy__(
+                AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address()
+            );
     }
 
 
@@ -270,7 +276,10 @@ mod account_generic_tests {
         signature.append(0x1);
         testing::set_signature(signature.span());
 
-        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address());
+        arcade_account
+            .__validate_deploy__(
+                AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address()
+            );
     }
 
     #[test]
@@ -283,7 +292,10 @@ mod account_generic_tests {
         let empty_sig = array![];
 
         testing::set_signature(empty_sig.span());
-        arcade_account.__validate_deploy__(AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address());
+        arcade_account
+            .__validate_deploy__(
+                AA_CLASS_HASH(), SALT, PUBLIC_KEY, starknet::get_contract_address()
+            );
     }
 
 
@@ -361,7 +373,7 @@ mod account_generic_tests {
             .update_whitelisted_contracts(array![(simple_test_contract.contract_address, true)]);
 
         // Craft call and add to calls array
-        let mut calldata = array![true.into()];
+        let mut calldata = array![true];
         let call = Call {
             to: simple_test_contract.contract_address,
             selector: simple_test_contract::SelectorImpl::set_cold_selector(),
