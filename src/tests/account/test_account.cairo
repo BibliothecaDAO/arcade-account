@@ -586,7 +586,7 @@ mod account_generic_tests {
     fn test_public_key_setter_and_getter_camel() {
         testing::set_contract_address(AA_ADDRESS());
 
-        let arcade_account = AccountCamelABIDispatcher {
+        let arcade_account = ArcadeAccountCamelABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
         arcade_account.setPublicKey(NEW_PUBKEY);
@@ -600,7 +600,7 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     #[should_panic(expected: ('Account: unauthorized', 'ENTRYPOINT_FAILED'))]
     fn test_public_key_setter_different_account_camel() {
-        let arcade_account = AccountCamelABIDispatcher {
+        let arcade_account = ArcadeAccountCamelABIDispatcher {
             contract_address: deploy_arcade_account(Option::None(()))
         };
 
@@ -617,7 +617,7 @@ mod account_generic_tests {
     #[available_gas(2000000)]
     fn test_initializer() {
         let mut arcade_state = Account::contract_state_for_testing();
-        Account::InternalImpl::initializer(ref arcade_state, PUBLIC_KEY);
+        Account::AccountInternalImpl::initializer(ref arcade_state, PUBLIC_KEY);
         assert(
             Account::PublicKeyImpl::get_public_key(@arcade_state) == PUBLIC_KEY,
             'Should return public key'
@@ -664,17 +664,17 @@ mod account_generic_tests {
 
         Account::PublicKeyImpl::set_public_key(ref arcade_state, data.public_key);
 
-        let is_valid = Account::InternalImpl::_is_valid_signature(
+        let is_valid = Account::AccountInternalImpl::_is_valid_signature(
             @arcade_state, hash, good_signature.span()
         );
         assert(is_valid, 'Should accept valid signature');
 
-        let is_valid = Account::InternalImpl::_is_valid_signature(
+        let is_valid = Account::AccountInternalImpl::_is_valid_signature(
             @arcade_state, hash, bad_signature.span()
         );
         assert(!is_valid, 'Should reject invalid signature');
 
-        let is_valid = Account::InternalImpl::_is_valid_signature(
+        let is_valid = Account::AccountInternalImpl::_is_valid_signature(
             @arcade_state, hash, invalid_length_signature.span()
         );
         assert(!is_valid, 'Should reject invalid length');
@@ -693,12 +693,10 @@ mod account_master_control_tests {
 
     use arcade_account::Account;
     use arcade_account::account::interface::{
-        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait
+        IMasterControl, IMasterControlDispatcher, IMasterControlDispatcherTrait,
+        ArcadeAccountCamelABIDispatcher, ArcadeAccountABIDispatcher, ArcadeAccountABIDispatcherTrait
     };
-    use openzeppelin::account::interface::{
-        AccountABIDispatcher, AccountABIDispatcherTrait, AccountCamelABIDispatcher,
-        AccountCamelABIDispatcherTrait,
-    };
+    use openzeppelin::account::interface::{AccountABIDispatcher, AccountABIDispatcherTrait};
     use arcade_account::account::interface::Call;
     use arcade_account::tests::utils::helper_contracts::{
         ISimpleTestContractDispatcher, ISimpleTestContractDispatcherTrait, simple_test_contract,
@@ -727,7 +725,7 @@ mod account_master_control_tests {
         let call = Call {
             to: simple_test_contract.contract_address,
             selector: simple_test_contract::SelectorImpl::set_hot_selector(),
-            calldata: calldata
+            calldata: calldata.span()
         };
 
         // execute call
@@ -794,7 +792,7 @@ mod account_master_control_tests {
         let call = Call {
             to: simple_test_contract.contract_address,
             selector: simple_test_contract::SelectorImpl::set_hot_selector(),
-            calldata: calldata
+            calldata: calldata.span()
         };
 
         // execute call
@@ -845,7 +843,7 @@ mod account_master_control_tests {
             to: simple_test_contract.contract_address,
             //set_hot selector was whitelisted but set_cold is being called
             selector: simple_test_contract::SelectorImpl::set_cold_selector(),
-            calldata: calldata
+            calldata: calldata.span()
         };
 
         // execute call
@@ -902,7 +900,7 @@ mod account_master_control_tests {
         let call = Call {
             to: simple_test_contract.contract_address,
             selector: simple_test_contract::SelectorImpl::set_hot_selector(),
-            calldata: calldata
+            calldata: calldata.span()
         };
         let ret = master_control_dispatcher.function_call(array![call]);
 
@@ -937,7 +935,7 @@ mod account_master_control_tests {
         let call = Call {
             to: simple_test_contract.contract_address,
             selector: simple_test_contract::SelectorImpl::set_hot_selector(),
-            calldata: calldata
+            calldata: calldata.span()
         };
 
         // change caller address
