@@ -45,7 +45,7 @@ mod Account {
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
     // Account
-    #[abi(embed_v0)]
+    // #[abi(embed_v0)]
     impl SRC6Impl = AccountComponent::SRC6Impl<ContractState>;
     #[abi(embed_v0)]
     impl SRC6CamelOnlyImpl = AccountComponent::SRC6CamelOnlyImpl<ContractState>;
